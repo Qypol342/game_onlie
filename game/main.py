@@ -12,8 +12,8 @@ running = True
 import socket
 
 
-class conection(add):
-	def __init__(self):
+class conection():
+	def __init__(self,add):
 		
 		self.serverAddressPort   = add 
 		self.bufferSize= 1024
@@ -27,7 +27,7 @@ class conection(add):
 		return msgFromServer
 
  
-c = conection(("127.0.0.1", 20001))
+c = conection(("192.168.0.10", 20001))
 c.send({"type":"position"})
 
 msg = "Message from Server {}".format(c.recive()[0])
