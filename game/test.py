@@ -1,20 +1,47 @@
 import socket
+from more_itertools import locate
 
-hostname = socket.gethostname()
-ip_address = socket.gethostbyname(hostname)
-print(ip_address)
+class conection():
+	def __init__(self):
+		
+		self.serverAddressPort   = ("192.168.0.10", 20001)
+		self.bufferSize= 1024
+		self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+	def scan(self):
+		self.hostname = socket.gethostname()
+		self.my_ip = socket.gethostbyname(self.hostname)
+		self.local = self.my_ip[:list(locate(self.my_ip, lambda a: a == '.'))[-1]+1]
+		msgFromClient = str({"type":"server_recherche"})
+		bytesToSend= str.encode(msgFromClient)
+		self.UDPClientSocket.settimeout(1)
+		self.UDPClientSocket.sendto(bytesToSend, self.serverAddressPort)
+		
+		for i in range(256):
+			print(self.local+str(i))
+			if self.local+str(i) == "192.168.0.10":
+				print('good')
+			self.UDPClientSocket.sendto(bytesToSend, (self.local+str(i), 20001))
+			msgFromServer =None
+			try:
+				msgFromServer = self.UDPClientSocket.recvfrom(self.bufferSize)
+			except:
+				pass
+			print(msgFromServer)
+		
+
+	def send(self, data):
+		msgFromClient = str(data)
+		bytesToSend= str.encode(msgFromClient)
+		
+	def recive(self):
+		msgFromServer = self.UDPClientSocket.recvfrom(self.bufferSize)
+		return msgFromServer
 
 
-import subprocess 
-  
-for ping in range(1,10): 
-    address = "192.168.56." + str(ping) 
-    res = subprocess.call(['ping', '-c', '3', address]) 
-    if res == 0: 
-        print( "ping to", address, "OK") 
-    elif res == 2: 
-    	pass
-        #print("no response from", address) 
-    else: 
-    	pass
-        #print("ping to", address, "failed!") 
+
+
+
+
+
+c = conection()
+c.scan()

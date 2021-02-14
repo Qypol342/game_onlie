@@ -12,10 +12,10 @@ running = True
 import socket
 
 
-class conection(add):
+class conection():
 	def __init__(self):
 		
-		self.serverAddressPort   = add 
+		self.serverAddressPort   = ("192.168.0.10", 20001)
 		self.bufferSize= 1024
 		self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 	def send(self, data):
@@ -27,9 +27,9 @@ class conection(add):
 		return msgFromServer
 
  
-c = conection(("127.0.0.1", 20001))
+c = conection()
 c.send({"type":"position"})
 
 msg = "Message from Server {}".format(c.recive()[0])
-print("msg")
+print(msg)
 
