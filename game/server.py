@@ -4,13 +4,16 @@ localPort   = 20001
 bufferSize  = 1024
 
 # Create a datagram socket
+
 UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 # Bind to address and ip
+#UDPServerSocket.settimeout(1)
 UDPServerSocket.bind((localIP, localPort))
 print("UDP server up and listening")
 # Listen for incoming datagrams
 
-
+PLAYER1 = False
+PLAYER2 = False
 
 
 
@@ -25,10 +28,12 @@ print("UDP server up and listening")
 def pause():
   global MODE
   global GAMES
+  global PLAYER1
+  global PLAYER2
   if GAMES['PLAYER1'] == {}:
-    PLAYER1 == False
+    PLAYER1 = False
   if GAMES['PLAYER2'] == {}:
-    PLAYER2 == False
+    PLAYER2 = False
   
 
   bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
@@ -36,13 +41,16 @@ def pause():
   address = bytesAddressPair[1]
 
   if PLAYER1 == False:
-    print('player joined')
+    print('player joined 1')
     GAMES['PLAYER1'] ={'Address':address, 'x':eval(message)}
     PLAYER1 = True
   elif PLAYER2 == False:
-    print('player joined')
-    GAMES['PLAYER2'] ={'Address':address, 'x':eval(message)}
-    PLAYER2 = True
+    
+    if GAMES['PLAYER1'] != {'Address':address, 'x':eval(message)}:
+      print('player joined 2')
+      GAMES['PLAYER2'] ={'Address':address, 'x':eval(message)}
+      PLAYER2 = True
+      print(PLAYER1,PLAYER2)
   else:
     print('full')
 
@@ -55,6 +63,7 @@ def pause():
 
 
 def run():
+  print(GAMES)
   bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
   message = bytesAddressPair[0]
   address = bytesAddressPair[1]
@@ -74,12 +83,13 @@ def run():
 
 
 
-GAMES = {"PLAYER1":{}, "PLAYER1":{},"BALLE":[400,200,0],'RUN':False}
+GAMES = {"PLAYER1":{}, "PLAYER2":{},"BALLE":[400,200,0],'RUN':False}
 
 MODE ='PAUSE'
 
-while(True):
+while True:
 
+    #print(MODE)
     if MODE == 'PAUSE':
       pause()
     elif MODE == 'RUN':
