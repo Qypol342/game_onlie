@@ -8,6 +8,7 @@ class conection():
 		self.serverAddressPort   = ("192.168.0.10", 20001)
 		self.bufferSize= 1024
 		self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+		self.UDPClientSocket.settimeout(1)
 	def sub_scan(self, s,e, bts):
 
 	

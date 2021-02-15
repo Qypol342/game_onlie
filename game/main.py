@@ -86,12 +86,17 @@ def check_BALLE_colision():
 def update_pos():
 	global YOUR_PADDEL
 	global BALLE
+	global OPPO_PADDEL
 	c = conection()
 	while  True:
 		c.send(YOUR_PADDEL.x)
-		r = eval(c.recive())
+		r = c.recive()
+		print(r)
 		if r !=  False:
+			r = eval(r)
 			print(r)
+			OPPO_PADDEL.x = r[0]
+
 		time.sleep(0.1)
 		
 def main():
