@@ -16,6 +16,7 @@ BLACK = (0,0,0)
 GREY  = (50 , 50, 50)
 BULLET_FONT = pygame.font.SysFont('arial',20)
 HUD_BORDER = pygame.Rect(0, 50, WIDTH , 10)
+print(WIDTH//2-WIDTH*0.1//2, "dsffffffffffffffffffffffff")
 YOUR_PADDEL = pygame.Rect(WIDTH//2-WIDTH*0.1//2, HEIGHT-50, WIDTH*0.1 , 20)
 OPPO_PADDEL = pygame.Rect(WIDTH//2-WIDTH*0.1//2, 50, WIDTH*0.1 , 20)
 
@@ -96,8 +97,10 @@ def update_pos():
 			r = eval(r)
 			print(r)
 			OPPO_PADDEL.x = r[0]
+			BALLE.x = r[1][0]
+			BALLE.y = r[1][1]
 
-		time.sleep(0.1)
+		#time.sleep(0.1)
 		
 def main():
 	#global YOUR_PADDEL
