@@ -1,4 +1,6 @@
 import socket
+import pygame
+import threading
 localIP     = "192.168.0.10"
 localPort   = 20001
 bufferSize  = 1024
@@ -59,11 +61,13 @@ def pause():
   if PLAYER2 == True and PLAYER1 == True:
     GAMES['BALLE'][2] = 1
     MODE = 'RUN'
+    threading.Thread(target=balle_sim).start()
+
 
 
 
 def run():
-  print(GAMES)
+  #print(GAMES)
   bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
   message = bytesAddressPair[0]
   address = bytesAddressPair[1]
@@ -80,12 +84,36 @@ def run():
      bytesToSend = str.encode(str([GAMES['PLAYER1']['x'],GAMES['BALLE']]))
      UDPServerSocket.sendto(bytesToSend, address)
 
+def balle_sim():
+  clock = pygame.time.Clock()
+  global GAMES
+  FPS = 60 
+  while run:
+    clock.tick(FPS)
+    print(GAMES['BALLE'])
+
+    if GAMES['BALLE'][2] != 0:
+      if GAMES['BALLE'][0] <= 20:
+        GAMES['BALLE'][2] = -GAMES['BALLE'][2]
+      if GAMES['BALLE'][0] >= 800- 20:
+        GAMES['BALLE'][2] = -GAMES['BALLE'][2]
+      GAMES['BALLE'][1] -= 1
+      GAMES['BALLE'][0] += GAMES['BALLE'][2]
+    if GAMES['BALLE'][1]+20 >= 450:
+    
+      if GAMES['BALLE'][0]+20 > GAMES['PLAYER1'] and GAMES['BALLE'][0]-20< GAMES['PLAYER1']+80 :
+        print('touch')
+        distance = GAMES['BALLE'][0] - GAMES['PLAYER1'] - 80//2 
+        print(tan(distance/60))
+        GAMES['BALLE'][2] = tan(distance/60)
 
 
 
-GAMES = {"PLAYER1":{}, "PLAYER2":{},"BALLE":[400,200,0],'RUN':False}
+GAMES = {"PLAYER1":{}, "PLAYER2":{},"BALLE":[400,200,0]}
 
 MODE ='PAUSE'
+
+
 
 while True:
 
