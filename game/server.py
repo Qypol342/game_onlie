@@ -1,4 +1,3 @@
-
 import socket
 localIP     = "192.168.0.10"
 localPort   = 20001
@@ -10,6 +9,121 @@ UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 UDPServerSocket.bind((localIP, localPort))
 print("UDP server up and listening")
 # Listen for incoming datagrams
+
+
+
+
+
+
+
+
+
+
+
+
+
+def pause():
+  global MODE
+  global GAMES
+  if GAMES['PLAYER1'] == {}:
+    PLAYER1 == False
+  if GAMES['PLAYER2'] == {}:
+    PLAYER2 == False
+  
+
+  bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
+  message = bytesAddressPair[0]
+  address = bytesAddressPair[1]
+
+  if PLAYER1 == False:
+    print('player joined')
+    GAMES['PLAYER1'] ={'Address':address, 'x':eval(message)}
+    PLAYER1 = True
+  elif PLAYER2 == False:
+    print('player joined')
+    GAMES['PLAYER2'] ={'Address':address, 'x':eval(message)}
+    PLAYER2 = True
+  else:
+    print('full')
+
+
+
+  if PLAYER2 == True and PLAYER1 == True:
+    GAMES['BALLE'][2] = 1
+    MODE = 'RUN'
+
+
+
+def run():
+  bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
+  message = bytesAddressPair[0]
+  address = bytesAddressPair[1]
+
+  if address == GAMES['PLAYER1']['Address']:
+    GAMES['PLAYER1']['x'] = eval(message)
+
+    bytesToSend = str.encode(str([GAMES['PLAYER2']['x'],GAMES['BALLE']]))
+    UDPServerSocket.sendto(bytesToSend, address)
+
+  else:
+     GAMES['PLAYER2']['x'] = eval(message)
+
+     bytesToSend = str.encode(str([GAMES['PLAYER1']['x'],GAMES['BALLE']]))
+     UDPServerSocket.sendto(bytesToSend, address)
+
+
+
+
+GAMES = {"PLAYER1":{}, "PLAYER1":{},"BALLE":[400,200,0],'RUN':False}
+
+MODE ='PAUSE'
+
+while(True):
+
+    if MODE == 'PAUSE':
+      pause()
+    elif MODE == 'RUN':
+      run()
+    
+
+
+
+
+
+
+'''
+import socket
+localIP     = "192.168.0.10"
+localPort   = 20001
+bufferSize  = 1024
+
+# Create a datagram socket
+UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+# Bind to address and ip
+UDPServerSocket.bind((localIP, localPort))
+print("UDP server up and listening")
+# Listen for incoming datagrams
+
+GAMES={1212:{'GAME_ID': 1212,'PLAYER':{}, 'BALLE':{'X':400,'Y':400,'V':0}}}
+
+def IN_GAME_DATA(ms):
+  #global address
+  global GAMES
+
+  gm = None
+  if  ms['DATA']['GAME_ID'] in GAMES:
+      gm = GAMES[ms['DATA']['GAME_ID']]
+  print('gm',gm)
+  if gm == None:
+    GAMES.append({'GAME_ID': ms['DATA']['GAME_ID'],'PLAYER':{}, 'BALLE':{'X':400,'Y':400,'V':0}})
+  if len(gm['PLAYER']) == 0:
+    gm['PLAYER'].update( {address:{'PADDLE':ms['DATA']['PADDEL']}})
+  elif len(gm['PLAYER']) == 1:
+    gm['PLAYER'].update( {address:{'PADDLE':ms['DATA']['PADDEL']}})
+
+
+
+
 while(True):
 
     bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
@@ -22,20 +136,36 @@ while(True):
     clientIP  = "Client IP Address:{}".format(address)
     
     print(clientMsg)
-    print(eval(message)['type'])
+    ms  = eval(message)
+    sorte = ms['type']
+    if sorte == 'IN_GAME_DATA':
+      IN_GAME_DATA(ms)
+    elif sorte == 'IN_GAME_DATA_REQUEST':
+      for i in GAMES:
+        if i == ms['DATA']['GAME_ID']:
+          if len(GAMES[i]['PLAYER']) == 2:
+          msgFromServer       = str({'type':'IN_GAME_DATA_REQUEST_RESULT','DATA':{'BALLE':GAMES[i]['BALLE']}})
+          bytesToSend         = str.encode(msgFromServer)
+          UDPServerSocket.sendto(bytesToSend, address)
+          break
+
+     
     print(clientIP)
 
    
 
     # Sending a reply to client
     if eval(message)['type'] == 'server_recherche':
-      msgFromServer       = "server_found"
+      msgFromServer       = "{'type':server_found}"
 
     else:
 
-      msgFromServer       = "Hello UDP Client"
+      msgFromServer       = "{'type':'Hello UDP Client'}"
 
 
     bytesToSend         = str.encode(msgFromServer)
 
     UDPServerSocket.sendto(bytesToSend, address)
+
+
+    '''
