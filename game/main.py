@@ -16,12 +16,12 @@ BLACK = (0,0,0)
 GREY  = (50 , 50, 50)
 BULLET_FONT = pygame.font.SysFont('arial',20)
 HUD_BORDER = pygame.Rect(0, 50, WIDTH , 10)
-print(WIDTH//2-WIDTH*0.1//2, "dsffffffffffffffffffffffff")
+
 YOUR_PADDEL = pygame.Rect(WIDTH//2-WIDTH*0.1//2, HEIGHT-50, WIDTH*0.1 , 20)
-OPPO_PADDEL = pygame.Rect(WIDTH//2-WIDTH*0.1//2, 50, WIDTH*0.1 , 20)
+OPPO_PADDEL = pygame.Rect(WIDTH//2-WIDTH*0.1//2, 50-20, WIDTH*0.1 , 20)
 
 BALLE = Cirl(WIDTH//2, HEIGHT//2, 20, 0)
-PADDEL_VEL = 2
+PADDEL_VEL = 5
 
 FPS = 60
 GAME_ID = 1212
@@ -44,7 +44,7 @@ def draw_window():
 
 def paddel_manager(keys_pressed):
 	global YOUR_PADDEL
-	if keys_pressed[pygame.K_d] and YOUR_PADDEL.x + PADDEL_VEL <= WIDTH:
+	if keys_pressed[pygame.K_d] and YOUR_PADDEL.x + PADDEL_VEL+YOUR_PADDEL.width <= WIDTH:
 		YOUR_PADDEL.x += PADDEL_VEL
 	if keys_pressed[pygame.K_q] and YOUR_PADDEL.x - PADDEL_VEL >= 0:
 		YOUR_PADDEL.x -= PADDEL_VEL
@@ -56,18 +56,12 @@ def tmp_balle_manager(keys_pressed):
 	if keys_pressed[pygame.K_DOWN] and BALLE.x - PADDEL_VEL <= HEIGHT:
 		BALLE.y += PADDEL_VEL
 		BALLE.v = 0
-	if BALLE.v != 0:
-		if BALLE.x <= BALLE.r:
-			BALLE.v = -BALLE.v
-		if BALLE.x >= WIDTH- BALLE.r:
-			BALLE.v = -BALLE.v
-		BALLE.y -= 1
-		BALLE.x += BALLE.v
 
 
 def key_manager(keys_pressed):
 	paddel_manager(keys_pressed)
-	tmp_balle_manager(keys_pressed)
+	#tmp_balle_manager(keys_pressed)
+	'''
 def check_BALLE_colision():
 	global BALLE
 	global YOUR_PADDEL
@@ -82,7 +76,7 @@ def check_BALLE_colision():
 			print(tan(distance/60))
 			BALLE.v = tan(distance/60)
 
-
+'''
 
 def update_pos():
 	global YOUR_PADDEL
@@ -92,10 +86,10 @@ def update_pos():
 	while  True:
 		c.send(YOUR_PADDEL.x)
 		r = c.recive()
-		print(r)
+		#print(r)
 		if r !=  False:
 			r = eval(r)
-			print(r)
+			#print(r)
 			OPPO_PADDEL.x = r[0]
 			BALLE.x = r[1][0]
 			BALLE.y = r[1][1]
@@ -115,7 +109,7 @@ def main():
 				run = False
 		keys_pressed = pygame.key.get_pressed()
 		key_manager(keys_pressed)
-		check_BALLE_colision()
+		#check_BALLE_colision()
 		draw_window()
 		
 		
