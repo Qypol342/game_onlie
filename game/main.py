@@ -15,6 +15,8 @@ WHITE = (255,255,255)
 BLACK = (0,0,0)
 GREY  = (50 , 50, 50)
 BULLET_FONT = pygame.font.SysFont('arial',20)
+SCORE_FONT = pygame.font.SysFont('arial',40)
+M_SCORE = ''
 HUD_BORDER = pygame.Rect(0, 50, WIDTH , 10)
 
 YOUR_PADDEL = pygame.Rect(WIDTH//2-WIDTH*0.1//2, HEIGHT-50, WIDTH*0.1 , 20)
@@ -26,13 +28,19 @@ PADDEL_VEL = 5
 FPS = 60
 GAME_ID = 1212
 
+SCORE = (0,0)
+
 
 
 
 def draw_window():
 	WIN.fill(GREY)
-	nb_bul_text = BULLET_FONT.render("Bullet: "+str(1),1,WHITE)
+	nb_bul_text = BULLET_FONT.render(str(SCORE),1,WHITE)
 	WIN.blit(nb_bul_text,(0,HEIGHT//2))
+	score_text = SCORE_FONT.render(str(M_SCORE),1,WHITE)
+	WIN.blit(score_text,(100,HEIGHT//2))
+
+
 	pygame.draw.rect(WIN,WHITE, YOUR_PADDEL)
 	pygame.draw.rect(WIN,WHITE, OPPO_PADDEL)
 	pygame.draw.circle(WIN,WHITE, (BALLE.x, BALLE.y), BALLE.r)
@@ -82,6 +90,8 @@ def update_pos():
 	global YOUR_PADDEL
 	global BALLE
 	global OPPO_PADDEL
+	global SCORE
+	global M_SCORE
 	c = conection()
 	while  True:
 		c.send(YOUR_PADDEL.x)
@@ -93,6 +103,16 @@ def update_pos():
 			OPPO_PADDEL.x = r[0]
 			BALLE.x = r[1][0]
 			BALLE.y = r[1][1]
+			SCORE = r[2]
+			e_s = (SCORE)
+			if e_s[0] >= 10:
+				M_SCORE = 'YOU WON'
+			elif e_s[1] >= 10:
+				M_SCORE = 'YOU LOSE'
+			else:
+				M_SCORE =''
+
+
 
 		#time.sleep(0.1)
 		
