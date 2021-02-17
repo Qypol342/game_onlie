@@ -1,6 +1,8 @@
 import socket
 import pygame
 import threading
+from math import tan
+import time
 localIP     = "192.168.0.10"
 localPort   = 20001
 bufferSize  = 1024
@@ -11,13 +13,15 @@ UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 # Bind to address and ip
 #UDPServerSocket.settimeout(1)
 UDPServerSocket.bind((localIP, localPort))
-print("UDP server up and listening")
+#print("UDP server up and listening")
 # Listen for incoming datagrams
 
 PLAYER1 = False
 PLAYER2 = False
+run_ = True
+MAX_P = 10
 
-
+BALLE_VEL = 4
 
 
 
@@ -32,6 +36,9 @@ def pause():
   global GAMES
   global PLAYER1
   global PLAYER2
+  global run_ 
+  run_ =True
+  
   if GAMES['PLAYER1'] == {}:
     PLAYER1 = False
   if GAMES['PLAYER2'] == {}:
@@ -44,72 +51,156 @@ def pause():
 
   if PLAYER1 == False:
     print('player joined 1')
-    GAMES['PLAYER1'] ={'Address':address, 'x':eval(message)}
+    GAMES['PLAYER1'] ={'Address':address, 'x':eval(message),'SCORE':0}
     PLAYER1 = True
   elif PLAYER2 == False:
     
-    if GAMES['PLAYER1'] != {'Address':address, 'x':eval(message)}:
+    if GAMES['PLAYER1'] != {'Address':address, 'x':eval(message),'SCORE':0}:
       print('player joined 2')
-      GAMES['PLAYER2'] ={'Address':address, 'x':eval(message)}
+      GAMES['PLAYER2'] ={'Address':address, 'x':eval(message),'SCORE':0}
       PLAYER2 = True
-      print(PLAYER1,PLAYER2)
+      #print(PLAYER1,PLAYER2)
   else:
     print('full')
 
 
 
   if PLAYER2 == True and PLAYER1 == True:
-    GAMES['BALLE'][2] = 1
+    GAMES['BALLE'][2] = 2
     MODE = 'RUN'
     threading.Thread(target=balle_sim).start()
+    
+
 
 
 
 
 def run():
-  #print(GAMES)
+
   bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
   message = bytesAddressPair[0]
   address = bytesAddressPair[1]
+  global run_
+  global GAMES
+  global MODE
+
+  #print(run_)
+
+
 
   if address == GAMES['PLAYER1']['Address']:
     GAMES['PLAYER1']['x'] = eval(message)
+    
 
-    bytesToSend = str.encode(str([GAMES['PLAYER2']['x'],GAMES['BALLE']]))
+    bytesToSend = str.encode(str([GAMES['PLAYER2']['x'],[800 - GAMES['BALLE'][0],  GAMES['BALLE'][1],GAMES['BALLE'][2]],(GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])]))
     UDPServerSocket.sendto(bytesToSend, address)
 
   else:
      GAMES['PLAYER2']['x'] = eval(message)
 
-     bytesToSend = str.encode(str([GAMES['PLAYER1']['x'],GAMES['BALLE']]))
+     bytesToSend = str.encode(str([GAMES['PLAYER1']['x'],[800 - GAMES['BALLE'][0], 500 - GAMES['BALLE'][1],GAMES['BALLE'][2]],(GAMES['PLAYER2']['SCORE'],GAMES['PLAYER1']['SCORE'])]))
      UDPServerSocket.sendto(bytesToSend, address)
+  if run_ == False:
+    time.sleep(3)
+    MODE = 'PAUSE'
+    GAMES['PLAYER1']['SCORE'] = 0 
+    GAMES['PLAYER2']['SCORE'] =  0
+    
+
 
 def balle_sim():
   clock = pygame.time.Clock()
+  time.sleep(2)
   global GAMES
+  global BALLE_VEL
+  global run_
+  GAMES['BALLE'][2] = 0
   FPS = 60 
-  while run:
+  UP = True
+  WIDTH, HEIGHT = 800 , 500 
+  r = 20 
+  run_ = True
+  while run_:
     clock.tick(FPS)
-    print(GAMES['BALLE'])
+    #print(GAMES['BALLE'])
+    if GAMES['PLAYER1']['SCORE']>= MAX_P or GAMES['PLAYER2']['SCORE']>= MAX_P:
+      run_ = False
+    if GAMES['BALLE'][0]+r+GAMES['BALLE'][2] > WIDTH:
+      GAMES['BALLE'][2] = -GAMES['BALLE'][2]
+    elif GAMES['BALLE'][0]-r+GAMES['BALLE'][2] < 0:
+      GAMES['BALLE'][2] = -GAMES['BALLE'][2]
+    if UP == True :
+      #print(GAMES['BALLE'][1]+r> HEIGHT-50)
+      iv = 800-GAMES['PLAYER1']['x']
+      if GAMES['BALLE'][1]+r>= HEIGHT-50 and GAMES['BALLE'][1]+r< HEIGHT-20:
+        
+         
+        if GAMES['BALLE'][0]-r <= iv and GAMES['BALLE'][0]+r>= iv-80 : 
+          print('touch1')
+          distance = GAMES['BALLE'][0]- (iv- 80//2 )
+          
+          GAMES['BALLE'][2] = tan(distance/60)*4
+          print(tan(distance/60),GAMES['BALLE'][2],BALLE_VEL)
+          #BALLE_VEL = 8//GAMES['BALLE'][2]
+          UP = False
+          
 
-    if GAMES['BALLE'][2] != 0:
-      if GAMES['BALLE'][0] <= 20:
-        GAMES['BALLE'][2] = -GAMES['BALLE'][2]
-      if GAMES['BALLE'][0] >= 800- 20:
-        GAMES['BALLE'][2] = -GAMES['BALLE'][2]
-      GAMES['BALLE'][1] -= 1
-      GAMES['BALLE'][0] += GAMES['BALLE'][2]
-    if GAMES['BALLE'][1]+20 >= 450:
+      
+
+
+
+
+      if GAMES['BALLE'][1]+r < HEIGHT:
+        GAMES['BALLE'][1] += BALLE_VEL
+        GAMES['BALLE'][0] += GAMES['BALLE'][2]
+      else:
+        GAMES['BALLE'][0] = 400
+        GAMES['BALLE'][1] = 250
+        GAMES['BALLE'][2] = 0
+        UP = False
+        
+        GAMES['PLAYER2']['SCORE'] +=1
+        print('reste1',GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])
+        time.sleep(1)
     
-      if GAMES['BALLE'][0]+20 > GAMES['PLAYER1'] and GAMES['BALLE'][0]-20< GAMES['PLAYER1']+80 :
-        print('touch')
-        distance = GAMES['BALLE'][0] - GAMES['PLAYER1'] - 80//2 
-        print(tan(distance/60))
-        GAMES['BALLE'][2] = tan(distance/60)
+    else: 
+      if GAMES['BALLE'][1]-r<= 50 and GAMES['BALLE'][1]-r> 20:
+        iv = 800-GAMES['PLAYER2']['x']
+        if GAMES['BALLE'][0]-r <= iv and GAMES['BALLE'][0]+r>= iv-80 : 
+          #print('touch2')
+          distance = GAMES['BALLE'][0]- (iv- 80//2 )
+          
+          GAMES['BALLE'][2] = tan(distance/60)*4.5
+          
+          #BALLE_VEL = 8//GAMES['BALLE'][2]
+          print(tan(distance/60),GAMES['BALLE'][2],BALLE_VEL)
+          UP = True
+          
+          
+      if GAMES['BALLE'][1]-r > 0:
+        GAMES['BALLE'][1] -= BALLE_VEL
+        GAMES['BALLE'][0] += GAMES['BALLE'][2]
+      else:
+        
+        GAMES['BALLE'][0] = 400
+        GAMES['BALLE'][1] = 250
+        GAMES['BALLE'][2] = 0
+        UP = True
+        
+        GAMES['PLAYER1']['SCORE'] +=1
+        print('reste2',GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])
+
+        time.sleep(1)
+  
+  print('finishballe_sim')
+  
+
+      
 
 
 
-GAMES = {"PLAYER1":{}, "PLAYER2":{},"BALLE":[400,200,0]}
+
+GAMES = {"PLAYER1":{}, "PLAYER2":{},"BALLE":[400,250,0]}
 
 MODE ='PAUSE'
 
@@ -117,93 +208,9 @@ MODE ='PAUSE'
 
 while True:
 
-    #print(MODE)
+
     if MODE == 'PAUSE':
       pause()
     elif MODE == 'RUN':
       run()
     
-
-
-
-
-
-
-'''
-import socket
-localIP     = "192.168.0.10"
-localPort   = 20001
-bufferSize  = 1024
-
-# Create a datagram socket
-UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-# Bind to address and ip
-UDPServerSocket.bind((localIP, localPort))
-print("UDP server up and listening")
-# Listen for incoming datagrams
-
-GAMES={1212:{'GAME_ID': 1212,'PLAYER':{}, 'BALLE':{'X':400,'Y':400,'V':0}}}
-
-def IN_GAME_DATA(ms):
-  #global address
-  global GAMES
-
-  gm = None
-  if  ms['DATA']['GAME_ID'] in GAMES:
-      gm = GAMES[ms['DATA']['GAME_ID']]
-  print('gm',gm)
-  if gm == None:
-    GAMES.append({'GAME_ID': ms['DATA']['GAME_ID'],'PLAYER':{}, 'BALLE':{'X':400,'Y':400,'V':0}})
-  if len(gm['PLAYER']) == 0:
-    gm['PLAYER'].update( {address:{'PADDLE':ms['DATA']['PADDEL']}})
-  elif len(gm['PLAYER']) == 1:
-    gm['PLAYER'].update( {address:{'PADDLE':ms['DATA']['PADDEL']}})
-
-
-
-
-while(True):
-
-    bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
-
-    message = bytesAddressPair[0]
-
-    address = bytesAddressPair[1]
-
-    clientMsg = "Message from Client:{}".format(message)
-    clientIP  = "Client IP Address:{}".format(address)
-    
-    print(clientMsg)
-    ms  = eval(message)
-    sorte = ms['type']
-    if sorte == 'IN_GAME_DATA':
-      IN_GAME_DATA(ms)
-    elif sorte == 'IN_GAME_DATA_REQUEST':
-      for i in GAMES:
-        if i == ms['DATA']['GAME_ID']:
-          if len(GAMES[i]['PLAYER']) == 2:
-          msgFromServer       = str({'type':'IN_GAME_DATA_REQUEST_RESULT','DATA':{'BALLE':GAMES[i]['BALLE']}})
-          bytesToSend         = str.encode(msgFromServer)
-          UDPServerSocket.sendto(bytesToSend, address)
-          break
-
-     
-    print(clientIP)
-
-   
-
-    # Sending a reply to client
-    if eval(message)['type'] == 'server_recherche':
-      msgFromServer       = "{'type':server_found}"
-
-    else:
-
-      msgFromServer       = "{'type':'Hello UDP Client'}"
-
-
-    bytesToSend         = str.encode(msgFromServer)
-
-    UDPServerSocket.sendto(bytesToSend, address)
-
-
-    '''
