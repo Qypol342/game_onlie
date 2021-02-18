@@ -26,7 +26,8 @@ BALLE = Cirl(WIDTH//2, HEIGHT//2, 20, 0)
 PADDEL_VEL = 5
 
 FPS = 60
-GAME_ID = 1212
+
+DEFAULT_IP = "192.168.0.10"
 
 SCORE = (0,0)
 
@@ -92,9 +93,9 @@ def update_pos():
 	global OPPO_PADDEL
 	global SCORE
 	global M_SCORE
-	c = conection()
+	c = conection(DEFAULT_IP)
 	while  True:
-		c.send(YOUR_PADDEL.x)
+		c.send({'type':'IN_GAME_DATA','DATA':YOUR_PADDEL.x})
 		r = c.recive()
 		#print(r)
 		if r !=  False:
@@ -116,8 +117,10 @@ def update_pos():
 
 		#time.sleep(0.1)
 		
-def main():
-	#global YOUR_PADDEL
+def main(ip):
+	global DEFAULT_IP
+	DEFAULT_IP = ip
+	print(ip)
 
 	clock = pygame.time.Clock()
 	run = True
@@ -137,12 +140,4 @@ def main():
 	pygame.quit()
 
 if __name__ == "__main__":
-	main()
-
-'''
-c = conection()
-c.send({"type":"position"})
-
-msg = "Message from Server {}".format(c.recive())
-print(msg)
-'''
+	main(DEFAULT_IP)

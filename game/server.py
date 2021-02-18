@@ -49,26 +49,37 @@ def pause():
   message = bytesAddressPair[0]
   address = bytesAddressPair[1]
 
-  if PLAYER1 == False:
-    print('player joined 1')
-    GAMES['PLAYER1'] ={'Address':address, 'x':eval(message),'SCORE':0}
-    PLAYER1 = True
-  elif PLAYER2 == False:
-    
-    if GAMES['PLAYER1'] != {'Address':address, 'x':eval(message),'SCORE':0}:
-      print('player joined 2')
-      GAMES['PLAYER2'] ={'Address':address, 'x':eval(message),'SCORE':0}
-      PLAYER2 = True
-      #print(PLAYER1,PLAYER2)
-  else:
-    print('full')
+  if eval(message)['type'] == 'IN_GAME_DATA':
+    message = str(eval(message)['DATA'])
+    if PLAYER1 == False:
+      print('player joined 1')
+      GAMES['PLAYER1'] ={'Address':address, 'x':eval(message),'SCORE':0}
+      PLAYER1 = True
+    elif PLAYER2 == False:
+      
+      if GAMES['PLAYER1'] != {'Address':address, 'x':eval(message),'SCORE':0}:
+        print('player joined 2')
+        GAMES['PLAYER2'] ={'Address':address, 'x':eval(message),'SCORE':0}
+        PLAYER2 = True
+        #print(PLAYER1,PLAYER2)
+    else:
+      print('full')
 
 
 
-  if PLAYER2 == True and PLAYER1 == True:
-    GAMES['BALLE'][2] = 2
-    MODE = 'RUN'
-    threading.Thread(target=balle_sim).start()
+    if PLAYER2 == True and PLAYER1 == True:
+      GAMES['BALLE'][2] = 2
+      MODE = 'RUN'
+      threading.Thread(target=balle_sim).start()
+  elif eval(message)['type'] == 'SERVER_SEARCH':
+    if PLAYER1 == True:
+      bytesToSend = str.encode(str({'type':'SERVER_SEARCH_REPOND', 'DATA':'1'}))
+      UDPServerSocket.sendto(bytesToSend, address)
+    else:
+      bytesToSend = str.encode(str({'type':'SERVER_SEARCH_REPOND', 'DATA':'0'}))
+      UDPServerSocket.sendto(bytesToSend, address)
+
+
     
 
 
@@ -86,25 +97,31 @@ def run():
 
   #print(run_)
 
+  if eval(message)['type'] == 'IN_GAME_DATA':
+    message = str(eval(message)['DATA'])
 
+    if address == GAMES['PLAYER1']['Address']:
+      GAMES['PLAYER1']['x'] = eval(message)
+      
 
-  if address == GAMES['PLAYER1']['Address']:
-    GAMES['PLAYER1']['x'] = eval(message)
-    
+      bytesToSend = str.encode(str([GAMES['PLAYER2']['x'],[800 - GAMES['BALLE'][0],  GAMES['BALLE'][1],GAMES['BALLE'][2]],(GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])]))
+      UDPServerSocket.sendto(bytesToSend, address)
 
-    bytesToSend = str.encode(str([GAMES['PLAYER2']['x'],[800 - GAMES['BALLE'][0],  GAMES['BALLE'][1],GAMES['BALLE'][2]],(GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])]))
+    else:
+       GAMES['PLAYER2']['x'] = eval(message)
+
+       bytesToSend = str.encode(str([GAMES['PLAYER1']['x'],[800 - GAMES['BALLE'][0], 500 - GAMES['BALLE'][1],GAMES['BALLE'][2]],(GAMES['PLAYER2']['SCORE'],GAMES['PLAYER1']['SCORE'])]))
+       UDPServerSocket.sendto(bytesToSend, address)
+    if run_ == False:
+      time.sleep(3)
+      MODE = 'PAUSE'
+      GAMES['PLAYER1']['SCORE'] = 0 
+      GAMES['PLAYER2']['SCORE'] =  0
+  elif eval(message)['type'] == 'SERVER_SEARCH':
+    bytesToSend = str.encode(str({'type':'SERVER_SEARCH_REPOND', 'DATA':'FULL'}))
     UDPServerSocket.sendto(bytesToSend, address)
 
-  else:
-     GAMES['PLAYER2']['x'] = eval(message)
 
-     bytesToSend = str.encode(str([GAMES['PLAYER1']['x'],[800 - GAMES['BALLE'][0], 500 - GAMES['BALLE'][1],GAMES['BALLE'][2]],(GAMES['PLAYER2']['SCORE'],GAMES['PLAYER1']['SCORE'])]))
-     UDPServerSocket.sendto(bytesToSend, address)
-  if run_ == False:
-    time.sleep(3)
-    MODE = 'PAUSE'
-    GAMES['PLAYER1']['SCORE'] = 0 
-    GAMES['PLAYER2']['SCORE'] =  0
     
 
 
@@ -160,7 +177,7 @@ def balle_sim():
         UP = False
         
         GAMES['PLAYER2']['SCORE'] +=1
-        print('reste1',GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])
+        #print('reste1',GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])
         time.sleep(1)
     
     else: 
@@ -188,7 +205,7 @@ def balle_sim():
         UP = True
         
         GAMES['PLAYER1']['SCORE'] +=1
-        print('reste2',GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])
+        #print('reste2',GAMES['PLAYER1']['SCORE'],GAMES['PLAYER2']['SCORE'])
 
         time.sleep(1)
   

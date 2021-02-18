@@ -3,9 +3,9 @@ from more_itertools import locate
 import threading
 
 class conection():
-	def __init__(self):
+	def __init__(self, c = "192.168.0.10" ):
 		
-		self.serverAddressPort   = ("192.168.0.10", 20001)
+		self.serverAddressPort   = (c, 20001)
 		self.bufferSize= 1024
 		self.UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 		self.UDPClientSocket.settimeout(1)
@@ -19,10 +19,12 @@ class conection():
 			try:
 				msgFromServer = self.UDPClientSocket.recvfrom(self.bufferSize)
 				msg = (msgFromServer[0]).decode("utf-8") 
-				if msg == "server_found":
-					self.server_op.append(self.local+str(i))
+				msg = eval(msg)
+				print(msg)
+				if msg['type'] == 'SERVER_SEARCH_REPOND':
+					self.server_op[self.local+str(i)] = msg['DATA']
 				
-			except:
+			except Exception as e:
 				pass
 
 	def scan(self):
@@ -36,11 +38,14 @@ class conection():
 
 
 		self.local = self.my_ip[:list(locate(self.my_ip, lambda a: a == '.'))[-1]+1]
-		msgFromClient = str({"type":"server_recherche"})
+		msgFromClient = str({"type":"SERVER_SEARCH"})
 		bytesToSend= str.encode(msgFromClient)
 		self.UDPClientSocket.settimeout(0.05)
-		self.server_op = []
-		sub = 3
+		self.server_op = {}
+		
+		sub =3
+
+		
 		for i in range(sub):
 			x = threading.Thread(target=self.sub_scan, args=(256//sub*i,256//sub*i+256//sub, bytesToSend))
 			x.start()
@@ -48,7 +53,9 @@ class conection():
 		
 			
 		x.join()
+		
 		print(self.server_op)
+		return self.server_op
 
 	def send(self, data):
 		msgFromClient = str(data)
@@ -62,3 +69,6 @@ class conection():
 		except:
 			msg= False
 		return msg
+
+
+
