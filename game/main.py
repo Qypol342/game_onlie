@@ -14,8 +14,15 @@ pygame.display.set_caption('Pong')
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 GREY  = (50 , 50, 50)
+DARCK_GREY  = (25 , 25, 25)
+LIGHT_GREY  = (120 , 120, 120)
+RED  = (255 , 0, 0)
+GREEN  = (0 , 255, 0)
 BULLET_FONT = pygame.font.SysFont('arial',20)
 SCORE_FONT = pygame.font.SysFont('arial',40)
+PACKAGE_FONT = pygame.font.SysFont('arial',10)
+NB_PACKAGE = 0
+TICK = 0
 M_SCORE = ''
 HUD_BORDER = pygame.Rect(0, 50, WIDTH , 10)
 
@@ -30,14 +37,21 @@ FPS = 60
 DEFAULT_IP = "192.168.0.10"
 
 SCORE = (0,0)
-
+RUN = True
 
 
 
 def draw_window():
+	global NB_PACKAGE
 	WIN.fill(GREY)
 	nb_bul_text = BULLET_FONT.render(str(SCORE),1,WHITE)
 	WIN.blit(nb_bul_text,(0,HEIGHT//2))
+	if int(NB_PACKAGE/TICK)<=80:
+		WIN.blit(PACKAGE_FONT.render(str(int(NB_PACKAGE/TICK)),1,RED),(10,10))
+	elif int(NB_PACKAGE/TICK)>80 and int(NB_PACKAGE/TICK)<=90:
+		WIN.blit(PACKAGE_FONT.render(str(int(NB_PACKAGE/TICK)),1,LIGHT_GREY),(10,10))
+	else :
+		WIN.blit(PACKAGE_FONT.render(str(int(NB_PACKAGE/TICK)),1,GREEN),(10,10))
 	score_text = SCORE_FONT.render(str(M_SCORE),1,WHITE)
 	WIN.blit(score_text,(100,HEIGHT//2))
 
@@ -57,6 +71,9 @@ def paddel_manager(keys_pressed):
 		YOUR_PADDEL.x += PADDEL_VEL
 	if keys_pressed[pygame.K_q] and YOUR_PADDEL.x - PADDEL_VEL >= 0:
 		YOUR_PADDEL.x -= PADDEL_VEL
+	if  keys_pressed[pygame.K_DELETE] or keys_pressed[pygame.K_BACKSPACE]:
+			global RUN 
+			RUN = False
 def tmp_balle_manager(keys_pressed):
 	global BALLE
 	if keys_pressed[pygame.K_UP] and BALLE.x + PADDEL_VEL <= HEIGHT:
@@ -93,11 +110,12 @@ def update_pos():
 	global OPPO_PADDEL
 	global SCORE
 	global M_SCORE
+	global NB_PACKAGE
 	c = conection(DEFAULT_IP)
-	while  True:
+	while  RUN:
 		c.send({'type':'IN_GAME_DATA','DATA':YOUR_PADDEL.x})
 		r = c.recive()
-		#print(r)
+		NB_PACKAGE += 1
 		if r !=  False:
 			r = eval(r)
 			#print(r)
@@ -119,25 +137,35 @@ def update_pos():
 		
 def main(ip):
 	global DEFAULT_IP
+	global NB_PACKAGE
+	global TICK
+	global RUN
+	RUN = True
 	DEFAULT_IP = ip
 	print(ip)
 
 	clock = pygame.time.Clock()
-	run = True
+	
 	threading.Thread(target=update_pos).start()
-	while run:
+	while RUN:
+		TICK += 1 
 		clock.tick(FPS)
+		
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				run = False
+				
+				RUN = False
 		keys_pressed = pygame.key.get_pressed()
 		key_manager(keys_pressed)
 		#check_BALLE_colision()
 		draw_window()
+		if TICK >= 60:
+			TICK = 0 
+			NB_PACKAGE = 0
 		
 		
 
-	pygame.quit()
+	############pygame.quit()
 
 if __name__ == "__main__":
 	main(DEFAULT_IP)
